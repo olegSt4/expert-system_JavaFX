@@ -46,22 +46,22 @@
 
 
     <dependencies>
-    
-        <!-- MigLayout -->
-
         <dependency>
             <groupId>com.miglayout</groupId>
             <artifactId>miglayout-javafx</artifactId>
             <version>5.0</version>
         </dependency>
-
-        <!-- Apache Commons -->
-
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
             <version>2.6</version>
         </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.18</version>
+        </dependency>
+
     </dependencies>
 
 </project>
