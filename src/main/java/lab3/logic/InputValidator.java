@@ -14,7 +14,6 @@ public class InputValidator {
                                 .replaceAll(",", "")
                                 .trim()
                                 .toLowerCase();
-            System.out.println(skillsArray[i]);
         }
         return skillsArray;
     }
