@@ -1,14 +1,14 @@
 package lab3.controllers;
 
+import javafx.scene.image.Image;
+import lab3.models.Position;
 import lab3.models.Skill;
-import lab3.models.Specialization;
-import lab3.models.SpecializationSummary;
+import lab3.models.PositionSummary;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.sql.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class DBController {
     private static final String JDBC_DRIVER = "org.postgresql.Driver";
@@ -17,107 +17,125 @@ public class DBController {
     private static final String DATABASE_PASSWORD = "postgre5541";
 
     private Map<String, Skill> skillsCache = new HashMap<>();
-    private Map<String, Set<Specialization>> relevantSpecCache = new HashMap<>();
-    private Map<String, SpecializationSummary> specSummariesCache = new HashMap<>();
+    private Map<Skill, Set<Position>> relevantPositionsCache = new HashMap<>();
+    private Map<String, PositionSummary> positionSummariesCache = new HashMap<>();
 
-    public Skill getSkillByName(String skillName) {
-        if (skillsCache.containsKey(skillName)) {
-            return skillsCache.get(skillName).clone();
-        } else {
-            try {
-                Class.forName(JDBC_DRIVER);
+    public List<Skill> getSkillsListByStringArray(String[] skillsName) {
+        List<Skill> skillsList = new ArrayList<>();
+        try {
+            Class.forName(JDBC_DRIVER);
 
-                String SQLQuery = "SELECT s.id, s.complexity FROM skills s where name = ?";
-                try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-                    PreparedStatement preparedStatement = connection.prepareStatement(SQLQuery)) {
-                    preparedStatement.setString(1, skillName);
+            for (String skillName : skillsName) {
+                if (skillsCache.containsKey(skillName)) {
+                    skillsList.add(skillsCache.get(skillName));
+                } else {
+                    String SQLQuery = "SELECT s.id FROM skills s where s.name = ?";
+                    try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+                        PreparedStatement ps = connection.prepareStatement(SQLQuery)) {
+                        ps.setString(1, skillName);
 
-                    ResultSet resultSet = preparedStatement.executeQuery();
-                    if (resultSet.next()) {
-                        int skillId = resultSet.getInt(1);
-                        int skillComplexity = resultSet.getInt(2);
-                        Skill newSkill = new Skill(skillId, skillName, skillComplexity);
+                        ResultSet resultSet = ps.executeQuery();
+                        resultSet.next();
+
+                        Skill newSkill = new Skill(resultSet.getInt(1), skillName);
                         skillsCache.put(skillName, newSkill);
 
-                        return newSkill.clone();
+                        skillsList.add(newSkill);
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
                     }
-                } catch (SQLException ex) {
-                    System.out.println(ex.getMessage());
                 }
-            } catch (ClassNotFoundException ex) {
-                System.out.println("There is a problem with driver class!");
-                ex.printStackTrace();
             }
-
-            return new Skill(0, "", 0);
+        } catch (ClassNotFoundException ex) {
+            System.out.println("There is a problem with driver class!");
+            ex.printStackTrace();
         }
+
+        return skillsList;
     }
 
-    public Set<Specialization> getRelevantSpecializationsForSkill(String skillName) {
-       if (relevantSpecCache.containsKey(skillName)) {
-           return relevantSpecCache.get(skillName);
-       } else {
-           Set<Specialization> relevantSpecializations = new HashSet<>();
+    public Set<Position> getRelevantPositionsForSkills(List<Skill> skills) {
+        Set<Position> relevantPositions = new HashSet<>();
 
-           try {
-               Class.forName(JDBC_DRIVER);
+        try {
+            Class.forName(JDBC_DRIVER);
 
-               String SQLQuery = "SELECT DISTINCT sp.id, sp.name FROM specializations sp " +
-                       "JOIN spec_requirements sr ON sp.id = sr.spec_id " +
-                       "JOIN skills sk ON sk.id = sr.skill_id " +
-                       "WHERE sk.name = ?";
-               try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
-                    PreparedStatement preparedStatement = connection.prepareStatement(SQLQuery)) {
-                   preparedStatement.setString(1, skillName);
+            for (Skill skill : skills) {
+                if (relevantPositionsCache.containsKey(skill)) {
+                    relevantPositions.addAll(relevantPositionsCache.get(skill));
+                } else {
+                    String SQLQuery = "SELECT DISTINCT p.id, p.name, p.image FROM positions p " +
+                            "JOIN pos_requirements pr ON p.id = pr.pos_id " +
+                            "JOIN skills sk ON sk.id = pr.skill_id " +
+                            "WHERE sk.name = ?";
+                    try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+                        PreparedStatement ps = connection.prepareStatement(SQLQuery)) {
+                        ps.setString(1, skill.name);
 
-                   ResultSet resultSet = preparedStatement.executeQuery();
+                        ResultSet resultSet = ps.executeQuery();
 
-                   while(resultSet.next()) {
-                       int specializationId = resultSet.getInt(1);
-                       String specializationName = resultSet.getString(2);
-                       Specialization specialization = new Specialization(specializationId, specializationName);
-                       relevantSpecializations.add(specialization);
-                   }
-               } catch (SQLException ex) {
-                   ex.printStackTrace();
-               }
-           } catch (ClassNotFoundException ex) {
-               System.out.println("There is a problem with driver class!");
-               ex.printStackTrace();
-           }
+                        Set<Position> skillRelevantPositions = new HashSet<>();
+                        while(resultSet.next()) {
+                            int posId = resultSet.getInt(1);
+                            String posName = resultSet.getString(2);
+                            InputStream imageByteStream = new ByteArrayInputStream(resultSet.getBytes(3));
+                            Image posImage = new Image(imageByteStream);
 
-           relevantSpecCache.put(skillName, relevantSpecializations);
-           return relevantSpecializations;
+                            Position newPosition = new Position(posId, posName, posImage);
+                            skillRelevantPositions.add(newPosition);
+                        }
+
+                        if (skillRelevantPositions.size() > 0) {
+                            relevantPositions.addAll(skillRelevantPositions);
+                            relevantPositionsCache.put(skill, skillRelevantPositions);
+                        }
+
+
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
+            }
+        } catch (ClassNotFoundException ex) {
+            System.out.println("There is a problem with driver class!");
+            ex.printStackTrace();
+        }
+
+          return relevantPositions;
        }
-    }
 
-    public SpecializationSummary getSpecializationSummary(Specialization specialization) {
-        if (specSummariesCache.containsKey(specialization.name)) {
-            return specSummariesCache.get(specialization.name).clone();
+    public PositionSummary getPositionSummary(Position position)  {
+        if (positionSummariesCache.containsKey(position.name)) {
+            return positionSummariesCache.get(position.name);
         } else {
+            PositionSummary positionSummary = new PositionSummary(position);
             try {
                 Class.forName(JDBC_DRIVER);
 
-                String SQLQuery = "SELECT sk.id, sk.name, sk.complexity FROM specializations sp " +
-                        "JOIN spec_requirements sr ON sp.id = sr.spec_id " +
-                        "JOIN skills sk ON sk.id = sr.skill_id " +
-                        "WHERE sp.name = ?";
+                String SQLQuery = "SELECT sk.id, sk.name, pr.worth FROM positions p " +
+                        "JOIN pos_requirements pr ON p.id = pr.pos_id " +
+                        "JOIN skills sk ON sk.id = pr.skill_id " +
+                        "WHERE p.name = ?";
                 try(Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
                     PreparedStatement preparedStatement = connection.prepareStatement(SQLQuery)) {
-                    preparedStatement.setString(1, specialization.name);
-                    SpecializationSummary specializationSummary = new SpecializationSummary(specialization);
+                    preparedStatement.setString(1, position.name);
 
+                    Map<Skill, Double> worthOfSkills = new HashMap<>();
                     ResultSet resultSet = preparedStatement.executeQuery();
                     while (resultSet.next()) {
                         int skillId = resultSet.getInt(1);
                         String skillName = resultSet.getString(2);
-                        int skillComplexity = resultSet.getInt(3);
-                        Skill newSkill = new Skill(skillId, skillName, skillComplexity);
+                        double skillWorth = resultSet.getDouble(3);
+                        Skill newSkill = new Skill(skillId, skillName);
 
-                        specializationSummary.addSkillNeeded(newSkill);
+                        if (!skillsCache.containsKey(skillName)) {
+                            skillsCache.put(skillName, newSkill);
+                        }
+
+                        worthOfSkills.put(newSkill, skillWorth);
                     }
 
-                    return specializationSummary;
+                    positionSummary.setWorthOfSkills(worthOfSkills);
                 } catch (SQLException ex) {
                     System.out.println(ex.getMessage());
                 }
@@ -125,9 +143,10 @@ public class DBController {
                 System.out.println("There is a problem with driver class!");
                 ex.printStackTrace();
             }
-        }
 
-        return new SpecializationSummary(specialization);
+            positionSummariesCache.put(position.name, positionSummary);
+            return positionSummary;
+        }
     }
 
 
