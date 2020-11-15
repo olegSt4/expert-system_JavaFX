@@ -14,8 +14,8 @@ public class ExpertSimulator {
         this.dbController = dbController;
     }
 
-    public List<PositionSummary> getTopPositionsBySkillsArray(String[] skillsArray, int topAmount) {
-        List<Skill> skillsList = dbController.getSkillsListByStringArray(skillsArray);
+    public List<PositionSummary> getTopPositionsBySkillsArray(List<String> skillsNames, int topAmount) {
+        List<Skill> skillsList = dbController.getSkillsListBySkillsNames(skillsNames);
         Set<Position> relevantPositions = dbController.getRelevantPositionsForSkills(skillsList);
         List<PositionSummary> posSummaries = getPositionSummaries(relevantPositions, skillsList);
 
@@ -31,13 +31,14 @@ public class ExpertSimulator {
             topPositions = posSummaries.subList(0, posSummaries.size());
         }
 
-        double currentWeight = -1;
+        double currentConformity = 0;
         for (PositionSummary ss : topPositions) {
-            if (ss.getConformity() == currentWeight) {
+            if (Math.abs(ss.getConformity() - currentConformity) <= 0.1) {
                 System.out.println("There is a match!");
                 // TODO: 12.11.2020 Implement additional user prompt
+                currentConformity = ss.getConformity();
             } else {
-                currentWeight = ss.getConformity();
+                currentConformity = ss.getConformity();
             }
         }
 
