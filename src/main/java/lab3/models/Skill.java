@@ -3,10 +3,12 @@ package lab3.models;
 public class Skill implements Cloneable{
     public final int id;
     public final String name;
+    public final String type;
 
-    public Skill(int id, String name) {
+    public Skill(int id, String name, String type) {
         this.id = id;
         this.name = name;
+        this.type = type;
     }
 
     public boolean equals(Object other) {
@@ -15,7 +17,7 @@ public class Skill implements Cloneable{
         }
 
         Skill otherSkill = (Skill) other;
-        return otherSkill.id == id && otherSkill.name.equals(name);
+        return otherSkill.id == id && otherSkill.name.equals(name) && otherSkill.type.equals(type);
     }
 
     public int hashCode() {
