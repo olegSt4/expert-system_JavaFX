@@ -11,6 +11,8 @@ import java.sql.*;
 import java.util.*;
 
 public class DBController {
+    private static DBController singleInstance;
+
     private static final String JDBC_DRIVER = "org.postgresql.Driver";
     private static final String DATABASE_URL = "jdbc:postgresql://localhost:5432/expert-system-db";
     private static final String DATABASE_USER = "postgres";
@@ -20,34 +22,67 @@ public class DBController {
     private Map<Skill, Set<Position>> relevantPositionsCache = new HashMap<>();
     private Map<String, PositionSummary> positionSummariesCache = new HashMap<>();
 
-    public DBController() throws ClassNotFoundException{
+    private DBController() throws ClassNotFoundException{
         Class.forName(JDBC_DRIVER);
     }
 
-    public List<Skill> getSkillsListByStringArray(String[] skillsName) {
-        List<Skill> skillsList = new ArrayList<>();
+    public static DBController getInstance() throws ClassNotFoundException{
+        if (singleInstance == null) {
+            singleInstance = new DBController();
+        }
 
-        String SQLQuery = "SELECT s.id FROM skills s where s.name = ?";
+        return singleInstance;
+    }
+
+    public List<Skill> getAllSkills() {
+        List<Skill> skills = new ArrayList<>();
+
+        String SQLQuery = "SELECT s.id, s.name, s.type FROM skills s";
         try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
              PreparedStatement ps = connection.prepareStatement(SQLQuery)) {
 
-            for (String skillName : skillsName) {
-                if (skillsCache.containsKey(skillName)) {
-                    skillsList.add(skillsCache.get(skillName));
-                } else {
+            ResultSet resultSet = ps.executeQuery();
+            while (resultSet.next()) {
+                int skillId = resultSet.getInt(1);
+                String skillName = resultSet.getString(2);
+                String skillType = resultSet.getString(3);
+
+                Skill newSkill = new Skill(skillId, skillName, skillType);
+                skillsCache.put(skillName, newSkill);
+                skills.add(newSkill);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
+        return skills;
+    }
+
+    public List<Skill> getSkillsListBySkillsNames(List<String> skillsNames) {
+        List<Skill> skillsList = new ArrayList<>();
+
+        for (String skillName : skillsNames) {
+            if (skillsCache.containsKey(skillName)) {
+                skillsList.add(skillsCache.get(skillName));
+            } else {
+                String SQLQuery = "SELECT s.id, s.type FROM skills s WHERE s.name = ?";
+                try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD);
+                     PreparedStatement ps = connection.prepareStatement(SQLQuery)) {
                     ps.setString(1, skillName);
 
                     ResultSet resultSet = ps.executeQuery();
                     if (resultSet.next()) {
-                        Skill newSkill = new Skill(resultSet.getInt(1), skillName);
-                        skillsCache.put(skillName, newSkill);
+                        int skillId = resultSet.getInt(1);
+                        String skillType = resultSet.getString(2);
 
+                        Skill newSkill = new Skill(skillId, skillName, skillType);
                         skillsList.add(newSkill);
+                        skillsCache.put(skillName, newSkill);
                     }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
                 }
             }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
         }
 
         return skillsList;
@@ -100,7 +135,7 @@ public class DBController {
         } else {
             PositionSummary positionSummary = new PositionSummary(position);
 
-            String SQLQuery = "SELECT sk.id, sk.name, pr.worth FROM positions p " +
+            String SQLQuery = "SELECT sk.id, sk.name, sk.type, pr.worth FROM positions p " +
                     "JOIN pos_requirements pr ON p.id = pr.pos_id " +
                     "JOIN skills sk ON sk.id = pr.skill_id " +
                     "WHERE p.name = ?";
@@ -113,8 +148,9 @@ public class DBController {
                 while (resultSet.next()) {
                     int skillId = resultSet.getInt(1);
                     String skillName = resultSet.getString(2);
-                    double skillWorth = resultSet.getDouble(3);
-                    Skill newSkill = new Skill(skillId, skillName);
+                    String skillType = resultSet.getString(3);
+                    double skillWorth = resultSet.getDouble(4);
+                    Skill newSkill = new Skill(skillId, skillName, skillType);
 
                     if (!skillsCache.containsKey(skillName)) {
                         skillsCache.put(skillName, newSkill);
