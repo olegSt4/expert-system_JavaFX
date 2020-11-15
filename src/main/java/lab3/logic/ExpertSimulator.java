@@ -1,9 +1,9 @@
 package lab3.logic;
 
 import lab3.controllers.DBController;
+import lab3.models.Position;
 import lab3.models.Skill;
-import lab3.models.Specialization;
-import lab3.models.SpecializationSummary;
+import lab3.models.PositionSummary;
 
 import java.util.*;
 
@@ -14,63 +14,48 @@ public class ExpertSimulator {
         this.dbController = dbController;
     }
 
-    public List<SpecializationSummary> getSpecializationsBySkillsArray(String[] skillsArray) {
-        Set<Specialization> relevantSpecializations = getRelevantSpecializations(skillsArray);
-        List<SpecializationSummary> specSummaries = getSpecSummaries(relevantSpecializations, skillsArray);
+    public List<PositionSummary> getTopPositionsBySkillsArray(String[] skillsArray, int topAmount) {
+        List<Skill> skillsList = dbController.getSkillsListByStringArray(skillsArray);
+        Set<Position> relevantPositions = dbController.getRelevantPositionsForSkills(skillsList);
+        List<PositionSummary> posSummaries = getPositionSummaries(relevantPositions, skillsList);
 
-        specSummaries.sort((SpecializationSummary ss1, SpecializationSummary ss2) ->
-           Double.compare(ss2.getPotentionalInPercentages(), ss1.getPotentionalInPercentages())
+        posSummaries.sort((PositionSummary ss1, PositionSummary ss2) ->
+           Double.compare(ss2.getConformity(), ss1.getConformity())
         );
 
 
-        List<SpecializationSummary> topSpecializations;
-        if (specSummaries.size() > 3) {
-            topSpecializations = specSummaries.subList(0, 3);
+        List<PositionSummary> topPositions;
+        if (posSummaries.size() > topAmount) {
+            topPositions = posSummaries.subList(0, 3);
         } else {
-            topSpecializations = specSummaries.subList(0, specSummaries.size());
+            topPositions = posSummaries.subList(0, posSummaries.size());
         }
 
         double currentWeight = -1;
-        for (SpecializationSummary ss : topSpecializations) {
-            if (ss.getPotentionalInPercentages() == currentWeight) {
+        for (PositionSummary ss : topPositions) {
+            if (ss.getConformity() == currentWeight) {
                 System.out.println("There is a match!");
                 // TODO: 12.11.2020 Implement additional user prompt
             } else {
-                currentWeight = ss.getPotentionalInPercentages();
+                currentWeight = ss.getConformity();
             }
         }
 
-        return topSpecializations;
+        return topPositions;
 
     }
 
-    private Set<Specialization> getRelevantSpecializations(String[] skillsArray) {
-        Set<Specialization> relevantSpecializations = new HashSet<>();
+    private List<PositionSummary> getPositionSummaries(Set<Position> relevantPositions, List<Skill> skillsList) {
+        List<PositionSummary> posSummaries = new ArrayList<>();
 
-        for (String skillName : skillsArray) {
-            Set<Specialization> skillRelevantSpec = dbController.getRelevantSpecializationsForSkill(skillName);
-            relevantSpecializations.addAll(skillRelevantSpec);
+        for (Position position : relevantPositions) {
+            PositionSummary posSummary = dbController.getPositionSummary(position);
+            posSummary.setAvailableSkills(skillsList);
+
+            posSummaries.add(posSummary);
+
         }
 
-        return relevantSpecializations;
-    }
-
-    private List<SpecializationSummary> getSpecSummaries(Set<Specialization> relevantSpecializations, String[] skillsArray) {
-        List<SpecializationSummary> specSummaries = new ArrayList<>();
-        for (Specialization specialization : relevantSpecializations) {
-            SpecializationSummary specSummary = dbController.getSpecializationSummary(specialization);
-
-            double currentComplexity = 0;
-            for (String skillName : skillsArray) {
-                Skill skill = dbController.getSkillByName(skillName);
-                if (specSummary.hasSkill(skill)) {
-                    currentComplexity += skill.complexity;
-                }
-            }
-            specSummary.setCurrentComplexity(currentComplexity);
-            specSummaries.add(specSummary);
-        }
-
-        return specSummaries;
+        return posSummaries;
     }
 }
