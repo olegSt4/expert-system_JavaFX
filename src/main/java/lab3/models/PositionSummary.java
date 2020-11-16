@@ -2,6 +2,7 @@ package lab3.models;
 
 import javafx.geometry.Pos;
 
+import javax.swing.text.html.ListView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,6 +23,10 @@ public class PositionSummary {
 
     public Position getPosition() {
         return this.position;
+    }
+
+    public List<Skill> getAvailableSkills() {
+        return availableSkills;
     }
 
     public double getConformity() {
@@ -52,5 +57,29 @@ public class PositionSummary {
                 }
             }
         }
+    }
+
+    public void addAvailableSkill(Skill newSkill) {
+        if (!availableSkills.contains(newSkill)) {
+            availableSkills.add(newSkill);
+            if (worthOfSkills.containsKey(newSkill)) {
+                conformity += worthOfSkills.get(newSkill);
+            }
+        }
+    }
+
+    public List<Skill> getFreeSkills() {
+        List<Skill> freeSkills = new ArrayList<>();
+
+        if (worthOfSkills.size() > 1) {
+            for (Map.Entry<Skill, Double> worthOfSkill : worthOfSkills.entrySet()) {
+                if (!availableSkills.contains(worthOfSkill.getKey())) {
+                    freeSkills.add(worthOfSkill.getKey());
+                }
+            }
+        }
+
+
+        return freeSkills;
     }
 }
