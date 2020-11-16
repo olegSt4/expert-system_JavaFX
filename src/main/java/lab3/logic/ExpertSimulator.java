@@ -61,12 +61,17 @@ public class ExpertSimulator {
         }
 
         if (topPositions.size() > 1) {
-
             double topConformity = topPositions.get(0).getConformity();
-            for (PositionSummary topPos : topPositions) {
-                if (topConformity != 1 && Math.abs(topPos.getConformity() - topConformity) <= 0.1) {
-                    askUserPreferences(topPositions);
-                    return;
+            if (topConformity < 1) {
+                int competitivePosCount = 0;
+                for (PositionSummary topPos : topPositions) {
+                    if (Math.abs(topPos.getConformity() - topConformity) <= 0.1) {
+                        competitivePosCount++;
+
+                        if (competitivePosCount > 1) {
+                            askUserPreferences(topPositions);
+                        }
+                    }
                 }
             }
         }
