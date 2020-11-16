@@ -2,8 +2,12 @@ package lab3.controllers;
 
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.stage.Stage;
 import lab3.logic.ExpertSimulator;
 import lab3.models.PositionSummary;
 import lab3.models.Skill;
@@ -43,8 +47,7 @@ public class MainWindowController
         skillsNames.addAll(selectedTechnologies);
         skillsNames.addAll(selectedInstruments);
 
-        List<PositionSummary> topPosition = expertSimulator.getTopPositionsBySkillsArray(skillsNames, 3);
-        drawPositions(topPosition);
+        expertSimulator.showTopPositionsBySkillsArray(skillsNames, 3);
     }
 
     private void fillLists() {
@@ -65,14 +68,4 @@ public class MainWindowController
         technologiesList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         instrumentsList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
     }
-
-    private void drawPositions(List<PositionSummary> topSpecializations) {
-        // TODO: 13.11.2020 draw positions on main window
-        for (PositionSummary ss : topSpecializations) {
-            double conformity = ss.getConformity() * 100;
-            System.out.println(ss.getPosition().name + " - " + (int) conformity + "%");
-        }
-        System.out.println();
-    }
-
 }

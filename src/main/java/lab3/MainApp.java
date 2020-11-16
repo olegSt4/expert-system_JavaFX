@@ -1,4 +1,4 @@
-package lab3;
+package lab3.logic;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -18,8 +18,9 @@ public class MainApp extends Application {
 
         Scene scene = new Scene(rootNode);
 
-        stage.setTitle("Hello JavaFX and Maven");
+        stage.setTitle("Find your position");
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.show();
     }
 }
