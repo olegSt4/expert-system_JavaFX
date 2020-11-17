@@ -84,7 +84,7 @@ public class UserPreferencesWindowController {
         }
     }
 
-    private void drawPositions(List<PositionSummary> topSpecializations) {
+    private void drawPositions(List<PositionSummary> topPositions) {
         try {
             String fxmlFile = "/fxml/topPositionsWindow.fxml";
             FXMLLoader loader = new FXMLLoader();
@@ -100,8 +100,8 @@ public class UserPreferencesWindowController {
             stage.setScene(scene);
             stage.show();
 
-            TopPositionsWindowController TPWC = loader.getController();
-            TPWC.showInfo(topSpecializations);
+            TopPositionsWindowController TopPosWinCont = loader.getController();
+            TopPosWinCont.showInfo(topPositions);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
