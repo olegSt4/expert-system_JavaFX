@@ -21,6 +21,10 @@ public class ExpertSimulator {
         this.dbController = dbController;
     }
 
+    /** Considers the user skills and shows the top-positions
+     * @param skillsNames - user's skills names
+     * @param topAmount - maximum length of top-position list
+     * */
     public void showTopPositionsBySkillsArray(List<String> skillsNames, int topAmount) {
         List<Skill> skillsList = dbController.getSkillsListBySkillsNames(skillsNames);
         Set<Position> relevantPositions = dbController.getRelevantPositionsForSkills(skillsList);
@@ -37,7 +41,6 @@ public class ExpertSimulator {
             posSummary.setAvailableSkills(skillsList);
 
             posSummaries.add(posSummary);
-
         }
 
         return posSummaries;
@@ -60,19 +63,13 @@ public class ExpertSimulator {
             return;
         }
 
+        // Checks if there is competitive positions and makes additional prompt to user
         if (topPositions.size() > 1) {
-            double topConformity = topPositions.get(0).getConformity();
-            if (topConformity < 1) {
-                int competitivePosCount = 0;
-                for (PositionSummary topPos : topPositions) {
-                    if (Math.abs(topPos.getConformity() - topConformity) <= 0.1) {
-                        competitivePosCount++;
+            double firstConformity = topPositions.get(0).getConformity();
+            double secondConformity = topPositions.get(1).getConformity();
 
-                        if (competitivePosCount > 1) {
-                            askUserPreferences(topPositions);
-                        }
-                    }
-                }
+            if (Math.abs(firstConformity - secondConformity) <= 0.1) {
+                askUserPreferences(topPositions);
             }
         }
 
@@ -81,7 +78,8 @@ public class ExpertSimulator {
 
     }
 
-    public void askUserPreferences(List<PositionSummary> competetivePosSummaries) {
+    /** Open the additional user-prompt window and ask user for additional skills*/
+    public void askUserPreferences(List<PositionSummary> competitivePosSummaries) {
         try {
             String fxmlFile = "/fxml/userPreferencesWindow.fxml";
             FXMLLoader loader = new FXMLLoader();
@@ -95,14 +93,14 @@ public class ExpertSimulator {
             stage.setScene(scene);
             stage.show();
 
-            UserPreferencesWindowController UPWC = loader.getController();
-            UPWC.askUser(competetivePosSummaries, dbController);
+            UserPreferencesWindowController UserPrefWinCont = loader.getController();
+            UserPrefWinCont.askUser(competitivePosSummaries, dbController);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private void drawPositions(List<PositionSummary> topSpecializations) {
+    private void drawPositions(List<PositionSummary> topPositions) {
         try {
             String fxmlFile = "/fxml/topPositionsWindow.fxml";
             FXMLLoader loader = new FXMLLoader();
@@ -118,8 +116,8 @@ public class ExpertSimulator {
             stage.setScene(scene);
             stage.show();
 
-            TopPositionsWindowController TPWC = loader.getController();
-            TPWC.showInfo(topSpecializations);
+            TopPositionsWindowController TopPosWinCont = loader.getController();
+            TopPosWinCont.showInfo(topPositions);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
