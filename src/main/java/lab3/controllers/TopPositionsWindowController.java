@@ -20,17 +20,16 @@ public class TopPositionsWindowController {
     @FXML private VBox positionsVBox;
 
 
+    /** Shows the  list of user positions and corresponding top-positions with theirs conformities*/
     public void showInfo(List<PositionSummary> topPositions) {
         if (topPositions.size() < 1) {
             return;
         }
 
-        List<Skill> skills = topPositions.get(0).getAvailableSkills();
-        for (Skill skill : skills) {
-            skillsList.getItems().add(skill.name);
-        }
+        showAvailableSkills(topPositions.get(0).getAvailableSkills());
 
         for (PositionSummary topPosition : topPositions) {
+            // vBox representing the top-position info
             VBox vBox = new VBox();
             vBox.setPrefSize(230, 290);
             vBox.setBorder(new Border(new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID,
@@ -54,6 +53,12 @@ public class TopPositionsWindowController {
 
             vBox.getChildren().addAll(imageView, posName, posConformity);
             positionsVBox.getChildren().add(vBox);
+        }
+    }
+
+    private void showAvailableSkills(List<Skill> availableSkills) {
+        for (Skill skill : availableSkills) {
+            skillsList.getItems().add(skill.name);
         }
     }
 }
