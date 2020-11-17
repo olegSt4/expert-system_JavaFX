@@ -47,7 +47,9 @@ public class MainWindowController
         skillsNames.addAll(selectedTechnologies);
         skillsNames.addAll(selectedInstruments);
 
-        expertSimulator.showTopPositionsBySkillsArray(skillsNames, 3);
+        if (skillsNames.size() > 0) {
+            expertSimulator.showTopPositionsBySkillsArray(skillsNames, 3);
+        }
     }
 
     private void fillLists() {
