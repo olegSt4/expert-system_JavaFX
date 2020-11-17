@@ -1,17 +1,23 @@
 package lab3.models;
 
-import javafx.geometry.Pos;
-
-import javax.swing.text.html.ListView;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Used to store the full info about position
+ * including available user skills
+ */
 public class PositionSummary {
     private Position position;
+    /** Stores skills needed for this position and their values*/
     private Map<Skill, Double> worthOfSkills;
+
+    /** Stores users skills in order to count conformity*/
     private List<Skill> availableSkills;
+
+    /** Shows how the users skills fit this position*/
     private double conformity;
 
     public PositionSummary(Position position) {
@@ -68,6 +74,7 @@ public class PositionSummary {
         }
     }
 
+    /** @return list of skills unoccupied by user*/
     public List<Skill> getFreeSkills() {
         List<Skill> freeSkills = new ArrayList<>();
 

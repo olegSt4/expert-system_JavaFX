@@ -1,5 +1,6 @@
 package lab3.models;
 
+/** Used to store the instance of Skill from DB*/
 public class Skill implements Cloneable{
     public final int id;
     public final String name;

@@ -2,6 +2,9 @@ package lab3.models;
 
 import javafx.scene.image.Image;
 
+/**
+ * Used to store the instance of position from DB
+ */
 public class Position {
     public final int id;
     public final String name;
