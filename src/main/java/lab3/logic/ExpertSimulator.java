@@ -70,6 +70,7 @@ public class ExpertSimulator {
 
             if (Math.abs(firstConformity - secondConformity) <= 0.1) {
                 askUserPreferences(topPositions);
+                return;
             }
         }
 
